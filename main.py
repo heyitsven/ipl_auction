@@ -1,18 +1,21 @@
 import csv
 import io
+import os
 from typing import Dict, List, Set
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Response
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 import database
 
 app = FastAPI(title="IPL Real-Time Auction")
 
-# Initialize SQLite database on startup
-database.init_db()
+@app.on_event("startup")
+def startup_event():
+    # Initialize SQLite database on startup
+    database.init_db()
 
 # Mount static folder
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
 
 # Helper function to compute next bid increment
 def get_next_increment(current_bid: int) -> int:
@@ -59,9 +62,8 @@ manager = ConnectionManager()
 
 @app.get("/")
 def get_index():
-    # Return index.html from static folder
-    with open("static/index.html", "r", encoding="utf-8") as f:
-        return HTMLResponse(content=f.read())
+    # Return index.html from static folder using FileResponse
+    return FileResponse(os.path.join(os.path.dirname(__file__), "static", "index.html"))
 
 @app.get("/export-csv")
 def export_csv():
