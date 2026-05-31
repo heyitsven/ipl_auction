@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPL Real-Time Auction</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <!-- Header bar -->
+    <header>
+        <div>
+            <div class="logo">IPL Auction</div>
+            <div class="subtitle">Live Real-Time Arena</div>
+        </div>
+        <div id="connection-indicator" style="display: none;" class="status-header-bar">
+            <span class="user-count" id="online-users-count">Online Owners: 0</span>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- 1. JOIN VIEW -->
+        <section id="join-view" class="view-section active">
+            <div class="card join-card">
+                <h2 style="text-align: center; margin-bottom: 2rem; font-size: 2.2rem; color: #fff;">Enter Arena</h2>
+                
+                <div class="form-group">
+                    <label for="role-select">Select Your Role</label>
+                    <select id="role-select">
+                        <option value="team">Team Owner</option>
+                        <option value="auctioneer">Auctioneer</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="team-name-group">
+                    <label for="team-name-input">Team Name</label>
+                    <input type="text" id="team-name-input" placeholder="e.g. Mumbai Indians" maxlength="30">
+                </div>
+
+                <button class="btn" id="join-btn">Join Live Session</button>
+            </div>
+        </section>
+
+        <!-- 2. TEAM OWNER VIEW -->
+        <section id="owner-view" class="view-section">
+            <div class="status-header-bar">
+                <span style="font-weight: 600;">ROLE: <span style="color: var(--secondary);" id="owner-assigned-team">Team Owner</span></span>
+                <span id="owner-auction-status-badge" class="status-badge status-idle">Idle</span>
+            </div>
+
+            <div class="owner-grid">
+                <!-- Left: Current Player & Bid display -->
+                <div class="card player-showcase">
+                    <div style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px;">Current Player</div>
+                    <div class="player-name" id="owner-player-name">NO PLAYER ACTIVE</div>
+                    
+                    <div class="price-display">
+                        <div class="price-box">
+                            <div class="price-label">Base Price</div>
+                            <div class="price-val" id="owner-base-price">₹0</div>
+                        </div>
+                        <div class="price-box">
+                            <div class="price-label">Current Bid</div>
+                            <div class="price-val" id="owner-current-bid" style="color: var(--success);">₹0</div>
+                        </div>
+                        <div class="price-box">
+                            <div class="price-label">Highest Bidder</div>
+                            <div class="price-val bidder-val" id="owner-highest-bidder">None</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Live Bid History -->
+                <div class="card history-card">
+                    <h3 class="history-title">Bid Stream</h3>
+                    <ul class="history-list" id="owner-bid-history-list">
+                        <!-- Filled dynamically -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- FIXED BOTTOM BID ACTION BAR -->
+            <div class="bid-action-bar">
+                <button class="bid-btn" id="owner-bid-btn" disabled>PLACE BID</button>
+                <div class="increment-info" id="owner-increment-info">Next Increment: <span>+₹0</span></div>
+            </div>
+        </section>
+
+        <!-- 3. AUCTIONEER VIEW -->
+        <section id="auctioneer-view" class="view-section">
+            <div class="status-header-bar">
+                <span style="font-weight: 600; color: var(--primary);">ROLE: AUCTIONEER PANEL</span>
+                <div style="display: flex; gap: 10px;">
+                    <a href="/export-csv" class="btn" style="padding: 0.4rem 1rem; font-size: 0.9rem; background: linear-gradient(135deg, var(--secondary), #00b8d4); text-decoration: none; color: #000; text-align: center; border-radius: 6px; font-weight: 700;">Export CSV</a>
+                    <span id="auc-auction-status-badge" class="status-badge status-idle">Idle</span>
+                </div>
+            </div>
+
+            <div class="auctioneer-grid">
+                <!-- Left: Control panel -->
+                <div class="card controls-card">
+                    <h3 style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">Player Configurator</h3>
+                    
+                    <div class="form-group">
+                        <label for="auc-player-name-input">Player Name</label>
+                        <input type="text" id="auc-player-name-input" placeholder="e.g. Jasprit Bumrah">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="auc-base-price-input">Base Price (in Lakhs)</label>
+                        <select id="auc-base-price-input">
+                            <option value="20">₹20 Lakh</option>
+                            <option value="30">₹30 Lakh</option>
+                            <option value="40">₹40 Lakh</option>
+                            <option value="50">₹50 Lakh</option>
+                            <option value="75">₹75 Lakh</option>
+                            <option value="100">₹1.00 Crore (100 Lakh)</option>
+                            <option value="150">₹1.50 Crore (150 Lakh)</option>
+                            <option value="200">₹2.00 Crore (200 Lakh)</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary" id="auc-start-btn">Start Auction</button>
+
+                    <h3 style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-top: 1rem; margin-bottom: 0.5rem;">Hammer Actions</h3>
+                    
+                    <div class="panel-row">
+                        <button class="btn btn-success" id="auc-sold-btn" disabled>Hammer Sold</button>
+                        <button class="btn btn-danger" id="auc-unsold-btn" disabled>Hammer Unsold</button>
+                    </div>
+
+                    <button class="btn btn-secondary" id="auc-reset-btn">Reset for Next Player</button>
+                </div>
+
+                <!-- Right: Live status tracker -->
+                <div class="card controls-card">
+                    <h3 style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Live Statistics</h3>
+                    
+                    <div class="price-display" style="margin-top: 0.5rem; margin-bottom: 1.5rem;">
+                        <div class="price-box" style="padding: 1rem;">
+                            <div class="price-label">Current Bid</div>
+                            <div class="price-val" id="auc-current-bid" style="color: var(--success); font-size: 1.8rem;">₹0</div>
+                        </div>
+                        <div class="price-box" style="padding: 1rem;">
+                            <div class="price-label">Highest Bidder</div>
+                            <div class="price-val bidder-val" id="auc-highest-bidder" style="font-size: 1.4rem;">None</div>
+                        </div>
+                    </div>
+
+                    <h3 class="history-title" style="font-size: 1.2rem; margin-bottom: 0.5rem;">Auction Stream</h3>
+                    <ul class="history-list" id="auc-bid-history-list" style="max-height: 200px;">
+                        <!-- Filled dynamically -->
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
